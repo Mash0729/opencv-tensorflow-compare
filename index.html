@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenCV.js test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <label for="imageInput">セピア化する画像を選択してください。</label>
+  <input type="file" name="imageInput" id="imageInput" accept="image/*">
+  <button id="procButton">実行</button>
+  <button id="clearButton">クリア</button>
+  <button id="downloadButton">ダウンロード</button>
+  <div class="dispContainer">
+    <div class="dispBox" id="dispInput"></div>
+    <div class="dispBox" id="dispOutput"></div>
+  </div>
+  <script src="https://docs.opencv.org/4.12.0/opencv.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
