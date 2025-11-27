@@ -10,9 +10,7 @@
     <div class="buttonContainer">
       <label for="imageInput">セピア化する画像を選択してください。</label>
       <input type="file" name="imageInput" id="imageInput" accept="image/*" />
-      <button id="procButton">実行</button>
       <button id="clearButton">クリア</button>
-      <button id="downloadButton">ダウンロード</button>
     </div>
     <div class="dispContainer">
       <div class="dispBox" id="dispInput"></div>
@@ -24,17 +22,26 @@
         </thead>
         <tbody>
           <tr>
-            <th scope="row">Native</th>
+            <th scope="row">
+              <p>Native</p>
+              <button id="nativeProcButton">実行</button>
+            </th>
             <td class="resultCell"></td>
             <td></td>
           </tr>
           <tr>
-            <th scope="row">OpenCV.js</th>
+            <th scope="row">
+              <p>OpenCV.js</p>
+              <button id="opencvProcButton">実行</button>
+            </th>
             <td class="resultCell"></td>
             <td></td>
           </tr>
           <tr>
-            <th scope="row">Tensorflow</th>
+            <th scope="row">
+              <p>Tensorflow</p>
+              <button id="tensorflowProcButton">実行</button>
+            </th>
             <td class="resultCell"></td>
             <td></td>
           </tr>
