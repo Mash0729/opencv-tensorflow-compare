@@ -1,15 +1,24 @@
 const imageInput = document.getElementById("imageInput");
 const clearButton = document.getElementById("clearButton");
 const dispInput = document.getElementById("dispInput");
+
 const nativeProcButton = document.getElementById("nativeProcButton");
 const opencvProcButton = document.getElementById("opencvProcButton");
 const tensorflowProcButton = document.getElementById("tensorflowProcButton");
 
-let resultCanvas = null;
+const nativeResultCell = document.getElementById("nativeResultCell");
+const opencvResultCell = document.getElementById("opencvResultCell");
+const tensorflowResultCell = document.getElementById("tensorflowResultCell");
+
+const nativeTimeCell = document.getElementById("nativeTimeCell");
+const opencvTimeCell = document.getElementById("opencvTimeCell");
+const tensorflowTimeCell = document.getElementById("tensorflowTimeCell");
+
 let targetImage = null;
 
 // リロード時にinputを初期化
 imageInput.value = "";
+disableProcButtons(true);
 
 // 画像読み込み
 imageInput.addEventListener("change", (e) => {
@@ -34,18 +43,21 @@ imageInput.addEventListener("change", (e) => {
 
 nativeProcButton.addEventListener("click", () => {});
 
-opencvProcButton.addEventListener("click", () => {});
+opencvProcButton.addEventListener("click", () => {
+  const startTime = performance.now();
+  const resultCanvas = toSepiaWithOpenCV();
+  const endTime = performance.now();
+
+  if (resultCanvas) {
+    opencvResultCell.innerHTML = "";
+    opencvResultCell.appendChild(resultCanvas);
+
+    const time = endTime - startTime;
+    opencvTimeCell.textContent = time.toFixed(2);
+  }
+});
 
 tensorflowProcButton.addEventListener("click", () => {});
-
-// // 実行ボタン押下時
-// procButton.addEventListener("click", () => {
-//     // 処理結果表示
-//     dispOutput.innerHTML = "";
-//     resultCanvas = document.createElement("canvas");
-//     dispOutput.appendChild(resultCanvas);
-//     cv.imshow(resultCanvas, dst);
-// });
 
 // クリアボタン押下時
 clearButton.addEventListener("click", () => {
@@ -55,12 +67,16 @@ clearButton.addEventListener("click", () => {
   resultCanvas = null;
 });
 
+function toSepiaWithNative() {}
+
 function toSepiaWithOpenCV() {
   let src;
   let floatSrc;
   let mat;
   let floatDst;
   let dst;
+  let outputCanvas = null;
+
   try {
     // 画質劣化防止のために元画像の解像度のcanvasを作成
     const fullCanvas = document.createElement("canvas");
@@ -80,9 +96,12 @@ function toSepiaWithOpenCV() {
 
     // セピア化用の行列
     // RGBA->RGBAへの変換
+    // prettier-ignore
     const sepiaMatrix = [
-      0.393, 0.769, 0.189, 0, 0.349, 0.686, 0.168, 0, 0.272, 0.534, 0.131, 0, 0,
-      0, 0, 1,
+      0.393, 0.769, 0.189, 0,
+      0.349, 0.686, 0.168, 0,
+      0.272, 0.534, 0.131, 0,
+      0, 0, 0, 1,
     ];
     mat = cv.matFromArray(4, 4, cv.CV_32F, sepiaMatrix);
     floatDst = new cv.Mat();
@@ -91,6 +110,9 @@ function toSepiaWithOpenCV() {
     // 表示用に8bit符号なし整数型に戻す
     dst = new cv.Mat();
     floatDst.convertTo(dst, cv.CV_8U);
+
+    outputCanvas = document.createElement("canvas");
+    cv.imshow(outputCanvas, dst);
   } catch (err) {
     console.error(err);
   } finally {
@@ -101,4 +123,14 @@ function toSepiaWithOpenCV() {
     if (floatDst) floatDst.delete();
     if (dst) dst.delete();
   }
+
+  return outputCanvas;
+}
+
+function toSepiaWithTensorflow() {}
+
+function disableProcButtons(disabled) {
+  nativeProcButton.disabled = disabled;
+  opencvProcButton.disabled = disabled;
+  tensorflowProcButton.disabled = disabled;
 }
