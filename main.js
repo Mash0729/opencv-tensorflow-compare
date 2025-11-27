@@ -16,7 +16,7 @@ const tensorflowTimeCell = document.getElementById("tensorflowTimeCell");
 
 let targetImage = null;
 
-// リロード時にinputを初期化
+// 初期状態設定
 imageInput.value = "";
 disableProcButtons(true);
 
@@ -36,7 +36,7 @@ imageInput.addEventListener("change", (e) => {
     dispInput.appendChild(img);
 
     targetImage = img;
-    dispOutput.innerHTML = "";
+    disableProcButtons(false);
   };
   reader.readAsDataURL(file);
 });
@@ -65,6 +65,7 @@ clearButton.addEventListener("click", () => {
   dispInput.innerHTML = "";
   targetImage = null;
   resultCanvas = null;
+  disableProcButtons(true);
 });
 
 function toSepiaWithNative() {}
