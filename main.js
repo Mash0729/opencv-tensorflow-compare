@@ -85,6 +85,7 @@ function toSepiaWithNative() {
   return fullCanvas;
 }
 
+// セピア化: OpenCV.jsによる処理
 function toSepiaWithOpenCV() {
   let src;
   let floatSrc;
@@ -102,7 +103,7 @@ function toSepiaWithOpenCV() {
     const ctx = fullCanvas.getContext("2d");
     ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
-    // Mat形式で画像を保持
+    // Mat形式で画像を取得
     src = cv.imread(fullCanvas);
 
     // 32bit-floatへの一時的な変換
@@ -119,16 +120,18 @@ function toSepiaWithOpenCV() {
       0.272, 0.534, 0.131, 0,
       0, 0, 0, 1,
     ];
+    // 32bit-floatに変換
     mat = cv.matFromArray(4, 4, cv.CV_32F, sepiaMatrix);
     floatDst = new cv.Mat();
     console.time("OpenCV.js");
-    cv.transform(floatSrc, floatDst, mat);
+    cv.transform(floatSrc, floatDst, mat); // 線形変換
     console.timeEnd("OpenCV.js");
 
     // 表示用に8bit符号なし整数型に戻す
     dst = new cv.Mat();
     floatDst.convertTo(dst, cv.CV_8U);
 
+    // 表示用のcanvasを作って描画
     outputCanvas = document.createElement("canvas");
     cv.imshow(outputCanvas, dst);
   } catch (err) {
@@ -145,12 +148,15 @@ function toSepiaWithOpenCV() {
   return outputCanvas;
 }
 
+// セピア化: Tensorflow.jsによる処理
 async function toSepiaWithTensorflow() {
   const outputCanvas = document.createElement("canvas");
 
+  // 画質劣化防止のために元画像の解像度のcanvasを作成
   const fullCanvas = document.createElement("canvas");
   fullCanvas.width = targetImage.naturalWidth;
   fullCanvas.height = targetImage.naturalHeight;
+  // オフスクリーンで描画
   const ctx = fullCanvas.getContext("2d");
   ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
@@ -158,7 +164,8 @@ async function toSepiaWithTensorflow() {
   // ref: https://www.tensorflow.org/js/guide/tensors_operations?hl=ja
 
   // <Tensor>.dispose()でメモリ解放を行う代わりにtidyメソッドを使う
-  tf.tidy(() => {
+
+  const resultTensor = tf.tidy(() => {
     const imageTensor = tf.browser
       .fromPixels(fullCanvas)
       .slice([0, 0, 0], [-1, -1, 3]); // Aチャンネル除去
@@ -181,9 +188,12 @@ async function toSepiaWithTensorflow() {
     const newImageTensor = sepiaTensor
       .clipByValue(0, 255)
       .reshape(imageTensor.shape);
-
-    tf.browser.toPixels(newImageTensor.toInt(), outputCanvas);
+    return newImageTensor;
   });
+  // toPixelsは非同期関数で、tf.tidy内での非同期関数実行は非推奨のため、外で処理を行う
+  await tf.browser.toPixels(resultTensor.toInt(), outputCanvas);
+  resultTensor.dispose();
+
   return outputCanvas;
 }
 
