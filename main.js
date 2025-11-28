@@ -41,30 +41,42 @@ imageInput.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-nativeProcButton.addEventListener("click", () => { showResult(toSepiaWithNative, nativeResultCell, nativeTimeCell); });
+nativeProcButton.addEventListener("click", () => {
+  showResult(toSepiaWithNative, nativeResultCell, nativeTimeCell);
+});
 
-opencvProcButton.addEventListener("click", () => { showResult(toSepiaWithOpenCV, opencvResultCell, opencvTimeCell); });
+opencvProcButton.addEventListener("click", () => {
+  showResult(toSepiaWithOpenCV, opencvResultCell, opencvTimeCell);
+});
 
-tensorflowProcButton.addEventListener("click", () => { showResult(toSepiaWithTensorflow, tensorflowResultCell, tensorflowTimeCell); });
+tensorflowProcButton.addEventListener("click", () => {
+  showResult(toSepiaWithTensorflow, tensorflowResultCell, tensorflowTimeCell);
+});
 
 function toSepiaWithNative() {
+  // 画質劣化防止のために元画像の解像度のcanvasを作成
   const fullCanvas = document.createElement("canvas");
   fullCanvas.width = targetImage.naturalWidth;
   fullCanvas.height = targetImage.naturalHeight;
-  const ctx = fullCanvas.getContext("2d", { willReadFrequently: true });
+  // オフスクリーンで表示
+  const ctx = fullCanvas.getContext("2d");
 
   ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
   const imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
   const data = imageData.data;
 
-  for(let i = 0;i < data.length;i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    
+  console.time("Native");
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2];
+
     data[i] = r * 0.393 + g * 0.769 + b * 0.189;
     data[i + 1] = r * 0.349 + g * 0.686 + b * 0.168;
     data[i + 2] = r * 0.272 + g * 0.534 + b * 0.131;
   }
+  console.timeEnd("Native");
 
   ctx.putImageData(imageData, 0, 0);
   return fullCanvas;
@@ -106,7 +118,9 @@ function toSepiaWithOpenCV() {
     ];
     mat = cv.matFromArray(4, 4, cv.CV_32F, sepiaMatrix);
     floatDst = new cv.Mat();
+    console.time("OpenCV.js");
     cv.transform(floatSrc, floatDst, mat);
+    console.timeEnd("OpenCV.js");
 
     // 表示用に8bit符号なし整数型に戻す
     dst = new cv.Mat();
@@ -128,17 +142,58 @@ function toSepiaWithOpenCV() {
   return outputCanvas;
 }
 
-function toSepiaWithTensorflow() {}
+async function toSepiaWithTensorflow() {
+  const outputCanvas = document.createElement("canvas");
 
+  const fullCanvas = document.createElement("canvas");
+  fullCanvas.width = targetImage.naturalWidth;
+  fullCanvas.height = targetImage.naturalHeight;
+  const ctx = fullCanvas.getContext("2d");
+  ctx.drawImage(targetImage, 0, 0);
+
+  // テンソルは、ベクトルや行列の高次元への一般化
+
+  // <Tensor>.dispose()でメモリ解放を行う代わりにtidyメソッドを使う
+  tf.tidy(() => {
+    const imageTensor = tf.browser
+      .fromPixels(fullCanvas)
+      .slice([0, 0, 0], [-1, -1, 3]); // Aチャンネル除去
+
+    // セピア化用の行列
+    const sepiaMatrix = tf
+      .tensor2d([
+        [0.393, 0.769, 0.189],
+        [0.349, 0.686, 0.168],
+        [0.272, 0.534, 0.131],
+      ])
+      .transpose();
+
+    // 32bit-float化
+    const reshapedTensor = imageTensor.toFloat().reshape([-1, 3]);
+    cosole.time("Tensorflow.js");
+    const sepiaTensor = reshapedTensor.matMul(sepiaMatrix);
+    cosole.timeEnd("Tensorflow.js");
+
+    const newImageTensor = sepiaTensor
+      .clipByValue(0, 255)
+      .reshape(imageTensor.shape);
+
+    tf.browser.draw(newImageTensor.toInt(), outputCanvas);
+  });
+  return outputCanvas;
+}
+
+// 実行ボタンの無効化
 function disableProcButtons(disabled) {
   nativeProcButton.disabled = disabled;
   opencvProcButton.disabled = disabled;
   tensorflowProcButton.disabled = disabled;
 }
 
-function showResult(func, resultCell, timeCell) {
+// 特定の処理を行って結果をresultCellに描画、実行時間をtimeCellに記録する関数
+async function showResult(func, resultCell, timeCell) {
   const startTime = performance.now();
-  const resultCanvas = func();
+  const resultCanvas = await func();
   const endTime = performance.now();
 
   if (resultCanvas) {
@@ -150,11 +205,14 @@ function showResult(func, resultCell, timeCell) {
   }
 }
 
+// 表内のすべてのセルをクリア
 function clearAllCells() {
   const resultCells = document.querySelectorAll(".resultCell");
   const timeCells = document.querySelectorAll(".timeCell");
 
-  const toEmpty = (cell) => { cell.innerHTML = ""; };
+  const toEmpty = (cell) => {
+    cell.innerHTML = "";
+  };
 
   resultCells.forEach(toEmpty);
   timeCells.forEach(toEmpty);
