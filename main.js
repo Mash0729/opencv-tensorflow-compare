@@ -65,6 +65,7 @@ clearButton.addEventListener("click", () => {
   dispInput.innerHTML = "";
   targetImage = null;
   resultCanvas = null;
+  clearAllCells();
   disableProcButtons(true);
 });
 
@@ -134,4 +135,14 @@ function disableProcButtons(disabled) {
   nativeProcButton.disabled = disabled;
   opencvProcButton.disabled = disabled;
   tensorflowProcButton.disabled = disabled;
+}
+
+function clearAllCells() {
+  const resultCells = document.querySelectorAll(".resultCell");
+  const timeCells = document.querySelectorAll(".timeCell");
+
+  const toEmpty = (cell) => { cell.innerHTML = ""; };
+
+  resultCells.forEach(toEmpty);
+  timeCells.forEach(toEmpty);
 }
