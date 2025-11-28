@@ -41,6 +41,7 @@ imageInput.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
+// 実行ボタン押下時
 nativeProcButton.addEventListener("click", () => {
   showResult(toSepiaWithNative, nativeResultCell, nativeTimeCell);
 });
@@ -53,20 +54,22 @@ tensorflowProcButton.addEventListener("click", () => {
   showResult(toSepiaWithTensorflow, tensorflowResultCell, tensorflowTimeCell);
 });
 
+// セピア化: NativeなJavaScriptによる処理
 function toSepiaWithNative() {
   // 画質劣化防止のために元画像の解像度のcanvasを作成
   const fullCanvas = document.createElement("canvas");
   fullCanvas.width = targetImage.naturalWidth;
   fullCanvas.height = targetImage.naturalHeight;
-  // オフスクリーンで表示
+  // オフスクリーンで描画
   const ctx = fullCanvas.getContext("2d");
-
   ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
+  // 画像データの取得
   const imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
   const data = imageData.data;
 
   console.time("Native");
+  // 1次元配列dataにはRGBAの順で0~255の整数が格納されている
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i],
       g = data[i + 1],
@@ -95,7 +98,7 @@ function toSepiaWithOpenCV() {
     const fullCanvas = document.createElement("canvas");
     fullCanvas.width = targetImage.naturalWidth;
     fullCanvas.height = targetImage.naturalHeight;
-    // オフスクリーンで表示
+    // オフスクリーンで描画
     const ctx = fullCanvas.getContext("2d");
     ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
@@ -149,9 +152,10 @@ async function toSepiaWithTensorflow() {
   fullCanvas.width = targetImage.naturalWidth;
   fullCanvas.height = targetImage.naturalHeight;
   const ctx = fullCanvas.getContext("2d");
-  ctx.drawImage(targetImage, 0, 0);
+  ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
 
   // テンソルは、ベクトルや行列の高次元への一般化
+  // ref: https://www.tensorflow.org/js/guide/tensors_operations?hl=ja
 
   // <Tensor>.dispose()でメモリ解放を行う代わりにtidyメソッドを使う
   tf.tidy(() => {
