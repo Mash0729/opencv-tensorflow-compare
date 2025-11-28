@@ -41,35 +41,15 @@ imageInput.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-nativeProcButton.addEventListener("click", () => {});
+nativeProcButton.addEventListener("click", () => { showResult(toSepiaWithNative, nativeResultCell, nativeTimeCell); });
 
-opencvProcButton.addEventListener("click", () => {
-  const startTime = performance.now();
-  const resultCanvas = toSepiaWithOpenCV();
-  const endTime = performance.now();
+opencvProcButton.addEventListener("click", () => { showResult(toSepiaWithOpenCV, opencvResultCell, opencvTimeCell); });
 
-  if (resultCanvas) {
-    opencvResultCell.innerHTML = "";
-    opencvResultCell.appendChild(resultCanvas);
+tensorflowProcButton.addEventListener("click", () => { showResult(toSepiaWithTensorflow, tensorflowResultCell, tensorflowTimeCell); });
 
-    const time = endTime - startTime;
-    opencvTimeCell.textContent = time.toFixed(2);
-  }
-});
+function toSepiaWithNative() {
 
-tensorflowProcButton.addEventListener("click", () => {});
-
-// クリアボタン押下時
-clearButton.addEventListener("click", () => {
-  imageInput.value = "";
-  dispInput.innerHTML = "";
-  targetImage = null;
-  resultCanvas = null;
-  clearAllCells();
-  disableProcButtons(true);
-});
-
-function toSepiaWithNative() {}
+}
 
 function toSepiaWithOpenCV() {
   let src;
@@ -77,7 +57,7 @@ function toSepiaWithOpenCV() {
   let mat;
   let floatDst;
   let dst;
-  let outputCanvas = null;
+  let canvas = null;
 
   try {
     // 画質劣化防止のために元画像の解像度のcanvasを作成
@@ -113,8 +93,8 @@ function toSepiaWithOpenCV() {
     dst = new cv.Mat();
     floatDst.convertTo(dst, cv.CV_8U);
 
-    outputCanvas = document.createElement("canvas");
-    cv.imshow(outputCanvas, dst);
+    canvas = document.createElement("canvas");
+    cv.imshow(canvas, dst);
   } catch (err) {
     console.error(err);
   } finally {
@@ -126,7 +106,7 @@ function toSepiaWithOpenCV() {
     if (dst) dst.delete();
   }
 
-  return outputCanvas;
+  return canvas;
 }
 
 function toSepiaWithTensorflow() {}
@@ -135,6 +115,20 @@ function disableProcButtons(disabled) {
   nativeProcButton.disabled = disabled;
   opencvProcButton.disabled = disabled;
   tensorflowProcButton.disabled = disabled;
+}
+
+function showResult(func, resultCell, timeCell) {
+  const startTime = performance.now();
+  const resultCanvas = func();
+  const endTime = performance.now();
+
+  if (resultCanvas) {
+    resultCell.innerHTML = "";
+    resultCell.appendChild(resultCanvas);
+
+    const time = endTime - startTime;
+    timeCell.textContent = time.toFixed(2);
+  }
 }
 
 function clearAllCells() {
