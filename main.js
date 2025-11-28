@@ -170,9 +170,9 @@ async function toSepiaWithTensorflow() {
 
     // 32bit-float化
     const reshapedTensor = imageTensor.toFloat().reshape([-1, 3]);
-    cosole.time("Tensorflow.js");
+    console.time("Tensorflow.js");
     const sepiaTensor = reshapedTensor.matMul(sepiaMatrix);
-    cosole.timeEnd("Tensorflow.js");
+    console.timeEnd("Tensorflow.js");
 
     const newImageTensor = sepiaTensor
       .clipByValue(0, 255)
