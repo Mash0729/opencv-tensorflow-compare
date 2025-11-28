@@ -48,7 +48,26 @@ opencvProcButton.addEventListener("click", () => { showResult(toSepiaWithOpenCV,
 tensorflowProcButton.addEventListener("click", () => { showResult(toSepiaWithTensorflow, tensorflowResultCell, tensorflowTimeCell); });
 
 function toSepiaWithNative() {
+  const fullCanvas = document.createElement("canvas");
+  fullCanvas.width = targetImage.naturalWidth;
+  fullCanvas.height = targetImage.naturalHeight;
+  const ctx = fullCanvas.getContext("2d", { willReadFrequently: true });
 
+  ctx.drawImage(targetImage, 0, 0, fullCanvas.width, fullCanvas.height);
+
+  const imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
+  const data = imageData.data;
+
+  for(let i = 0;i < data.length;i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    
+    data[i] = r * 0.393 + g * 0.769 + b * 0.189;
+    data[i + 1] = r * 0.349 + g * 0.686 + b * 0.168;
+    data[i + 2] = r * 0.272 + g * 0.534 + b * 0.131;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return fullCanvas;
 }
 
 function toSepiaWithOpenCV() {
@@ -57,7 +76,7 @@ function toSepiaWithOpenCV() {
   let mat;
   let floatDst;
   let dst;
-  let canvas = null;
+  let outputCanvas = null;
 
   try {
     // 画質劣化防止のために元画像の解像度のcanvasを作成
@@ -93,8 +112,8 @@ function toSepiaWithOpenCV() {
     dst = new cv.Mat();
     floatDst.convertTo(dst, cv.CV_8U);
 
-    canvas = document.createElement("canvas");
-    cv.imshow(canvas, dst);
+    outputCanvas = document.createElement("canvas");
+    cv.imshow(outputCanvas, dst);
   } catch (err) {
     console.error(err);
   } finally {
@@ -106,7 +125,7 @@ function toSepiaWithOpenCV() {
     if (dst) dst.delete();
   }
 
-  return canvas;
+  return outputCanvas;
 }
 
 function toSepiaWithTensorflow() {}
