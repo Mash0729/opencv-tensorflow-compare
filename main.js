@@ -178,7 +178,7 @@ async function toSepiaWithTensorflow() {
       .clipByValue(0, 255)
       .reshape(imageTensor.shape);
 
-    tf.browser.draw(newImageTensor.toInt(), outputCanvas);
+    tf.browser.toPixels(newImageTensor.toInt(), outputCanvas);
   });
   return outputCanvas;
 }
